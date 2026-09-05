@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-
 export type UserRole = 'ADMIN' | 'OPERADOR' | 'CAJERO';
 
 export interface UserProfile {
@@ -28,6 +27,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(() => {
+    const savedUserStr = localStorage.getItem('cochera_user');
+    if (savedUserStr) {
+      try {
+        return JSON.parse(savedUserStr);
+      } catch {
+        // fallback
+      }
+    }
     const savedRole = localStorage.getItem('app_user_role') as UserRole;
     if (savedRole && ['ADMIN', 'OPERADOR', 'CAJERO'].includes(savedRole)) {
       return {
@@ -42,12 +49,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const setRole = (newRole: UserRole) => {
     localStorage.setItem('app_user_role', newRole);
-    setUser({
+    const updatedUser: UserProfile = {
       id: newRole === 'ADMIN' ? 1 : (newRole === 'CAJERO' ? 2 : 3),
       nombre: newRole === 'ADMIN' ? 'Juan Pérez (Admin)' : (newRole === 'CAJERO' ? 'Carlos Ruiz (Cajero)' : 'María López (Operador)'),
       email: `${newRole.toLowerCase()}@cocheracentral.pe`,
       rol: newRole,
-    });
+    };
+    localStorage.setItem('cochera_user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
   };
 
   const hasPermission = (allowedRoles: UserRole[]): boolean => {
@@ -56,8 +65,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<Response> => {
     const headers = new Headers(options.headers || {});
-    headers.set('x-user-role', user.rol);
-    headers.set('Authorization', `Bearer jwt-token-${user.id}`);
+    const token = localStorage.getItem('cochera_auth_token');
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
     return fetch(url, { ...options, headers });
   };
 
