@@ -22,6 +22,7 @@ import { Boleta } from '@modules/boletas/types/boleta.types';
 import { UserRoleSelector } from '@modules/auth/components/UserRoleSelector';
 import { useAuth, UserRole } from '@modules/auth/context/AuthContext';
 import { RoleGuard } from '@modules/auth/components/RoleGuard';
+import { LoginPage } from '@modules/auth/components/LoginPage';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES, TAB_TO_ROUTE, ROUTE_TO_TAB, TabType } from './routes/routes';
 import {
@@ -47,9 +48,18 @@ import { TicketPreviewModal } from '@modules/tickets/components/TicketPreviewMod
 import { VehiculosManager } from '@modules/movimientos/components/VehiculosManager';
 
 export function App() {
-  const { hasPermission } = useAuth();
+  const { user, isAuthenticated, logout, hasPermission } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Redireccionar al Login si la ruta es /login o no está autenticado
+  if (location.pathname === ROUTES.LOGIN) {
+    return <LoginPage />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to={ROUTES.LOGIN} replace />;
+  }
 
   const activeTab: TabType = ROUTE_TO_TAB[location.pathname] || 'dashboard';
 
@@ -242,7 +252,7 @@ export function App() {
           </div>
         </div>
 
-        {/* Global Quick Stats & Config & Role Selector */}
+        {/* Global Quick Stats & Config & Role Selector & Logout */}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div className="header-stats-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-primary)', padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
             <Car size={16} color="var(--accent-primary)" />
@@ -279,6 +289,18 @@ export function App() {
           </Button>
 
           <UserRoleSelector />
+
+          <Button
+            variant="danger"
+            onClick={() => {
+              logout();
+              navigate(ROUTES.LOGIN);
+            }}
+            icon={<LogOut size={16} />}
+            style={{ fontSize: '0.82rem', padding: '6px 12px' }}
+          >
+            Salir
+          </Button>
         </div>
       </header>
 

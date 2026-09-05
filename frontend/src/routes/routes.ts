@@ -7,6 +7,7 @@ export const ROUTES = {
   LISTA_NEGRA: '/lista-negra',
   REPORTES: '/reportes',
   CONFIGURACION: '/configuracion',
+  LOGIN: '/login',
 } as const;
 
 export type TabType = 'dashboard' | 'movimientos' | 'caja' | 'tarifas' | 'lista-negra' | 'reportes' | 'configuracion';

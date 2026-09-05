@@ -10,7 +10,10 @@ export interface UserProfile {
 }
 
 interface AuthContextType {
-  user: UserProfile;
+  user: UserProfile | null;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
   setRole: (role: UserRole) => void;
   hasPermission: (allowedRoles: UserRole[]) => boolean;
   fetchWithAuth: (url: string, options?: RequestInit) => Promise<Response>;
@@ -26,7 +29,7 @@ const DEFAULT_USER: UserProfile = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile>(() => {
+  const [user, setUser] = useState<UserProfile | null>(() => {
     const savedUserStr = localStorage.getItem('cochera_user');
     if (savedUserStr) {
       try {
@@ -47,27 +50,60 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return DEFAULT_USER;
   });
 
+  const isAuthenticated = Boolean(user && localStorage.getItem('cochera_auth_token'));
+
   useEffect(() => {
+    if (!user) return;
     const ensureToken = async () => {
-      try {
-        const pass = `${user.rol.toLowerCase()}123`;
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: user.email, password: pass }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.token) {
-            localStorage.setItem('cochera_auth_token', data.token);
+      const existingToken = localStorage.getItem('cochera_auth_token');
+      if (!existingToken) {
+        try {
+          const pass = `${user.rol.toLowerCase()}123`;
+          const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: user.email, password: pass }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.token) {
+              localStorage.setItem('cochera_auth_token', data.token);
+              localStorage.setItem('cochera_user', JSON.stringify(data.usuario));
+            }
           }
+        } catch {
+          // ignore
         }
-      } catch {
-        // ignore
       }
     };
     ensureToken();
   }, [user]);
+
+  const login = async (email: string, pass: string): Promise<void> => {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Credenciales de acceso no válidas');
+    }
+
+    const data = await res.json();
+    localStorage.setItem('cochera_auth_token', data.token);
+    localStorage.setItem('cochera_user', JSON.stringify(data.usuario));
+    localStorage.setItem('app_user_role', data.usuario.rol);
+    setUser(data.usuario);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('cochera_auth_token');
+    localStorage.removeItem('cochera_user');
+    localStorage.removeItem('app_user_role');
+    setUser(null);
+  };
 
   const setRole = (newRole: UserRole) => {
     localStorage.setItem('app_user_role', newRole);
@@ -82,6 +118,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const hasPermission = (allowedRoles: UserRole[]): boolean => {
+    if (!user) return false;
     return allowedRoles.includes(user.rol);
   };
 
@@ -95,7 +132,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, setRole, hasPermission, fetchWithAuth }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, setRole, hasPermission, fetchWithAuth }}>
       {children}
     </AuthContext.Provider>
   );
