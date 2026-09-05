@@ -1,8 +1,7 @@
 import { AuthRepository } from '../repositories/auth.repository.js';
+import { getJwtSecret } from '../../../core/middleware/auth.middleware.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'cochera_jwt_secret_key_2026_secure';
 
 export class AuthService {
   private repository: AuthRepository;
@@ -30,6 +29,9 @@ export class AuthService {
       throw new Error('Contraseña incorrecta');
     }
 
+    // Obtener JWT_SECRET estrictamente desde las variables de entorno
+    const secret = getJwtSecret();
+
     // Generar JWT firmado de verdad con expiración de 24 horas
     const tokenPayload = {
       userId: usuario.id,
@@ -38,7 +40,7 @@ export class AuthService {
       email: usuario.email,
     };
 
-    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign(tokenPayload, secret, { expiresIn: '24h' });
 
     const { password_hash: _, ...usuarioSinPassword } = usuario;
     return {

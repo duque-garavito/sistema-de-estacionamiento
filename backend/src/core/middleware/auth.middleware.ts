@@ -8,7 +8,13 @@ export interface AuthenticatedRequest extends Request {
   userEmail?: string;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'cochera_jwt_secret_key_2026_secure';
+export function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('FATAL SECURITY ERROR: JWT_SECRET no está configurada en las variables de entorno (.env)');
+  }
+  return secret;
+}
 
 export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers['authorization'];
@@ -22,7 +28,8 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as {
+    const secret = getJwtSecret();
+    const decoded = jwt.verify(token, secret) as {
       userId: number;
       userName: string;
       userRole: string;
@@ -37,7 +44,9 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
     next();
   } catch (err: any) {
     return res.status(401).json({
-      error: 'Token inválido o expirado. Por favor inicie sesión nuevamente.',
+      error: err.message.includes('FATAL SECURITY ERROR')
+        ? err.message
+        : 'Token inválido o expirado. Por favor inicie sesión nuevamente.',
     });
   }
 }

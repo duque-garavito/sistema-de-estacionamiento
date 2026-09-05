@@ -1,14 +1,15 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
 export const dbPool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT) || 3306,
+  host: process.env.DB_HOST || '127.0.0.1',
+  port: Number(process.env.DB_PORT) || 3307,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'cochera_db',
+  database: process.env.DB_NAME || 'sistema_cochera',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -16,6 +17,30 @@ export const dbPool = mysql.createPool({
 
 export async function inicializarTablasDatabase(): Promise<void> {
   try {
+    // 0. Tabla usuarios
+    await dbPool.query(`
+      CREATE TABLE IF NOT EXISTS \`usuarios\` (
+        \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+        \`nombre\` VARCHAR(100) NOT NULL,
+        \`email\` VARCHAR(100) NOT NULL UNIQUE,
+        \`password_hash\` VARCHAR(255) NOT NULL,
+        \`rol\` ENUM('ADMIN', 'OPERADOR', 'CAJERO') NOT NULL DEFAULT 'OPERADOR',
+        \`estado\` TINYINT(1) DEFAULT 1,
+        \`creado_en\` DATETIME DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB;
+    `);
+
+    // Verificar e insertar usuario Administrador por defecto si no existe
+    const [userRows]: any = await dbPool.query('SELECT id FROM usuarios WHERE email = ?', ['admin@cocheracentral.pe']);
+    if (!Array.isArray(userRows) || userRows.length === 0) {
+      const defaultHash = await bcrypt.hash('admin123', 10);
+      await dbPool.query(
+        'INSERT INTO usuarios (nombre, email, password_hash, rol, estado) VALUES (?, ?, ?, ?, 1)',
+        ['Administrador Cochera', 'admin@cocheracentral.pe', defaultHash, 'ADMIN']
+      );
+      console.log('🔒 Usuario Administrador por defecto creado con éxito (admin@cocheracentral.pe / admin123)');
+    }
+
     // 1. Tabla empresa_config
     await dbPool.query(`
       CREATE TABLE IF NOT EXISTS \`empresa_config\` (
@@ -135,8 +160,7 @@ export async function inicializarTablasDatabase(): Promise<void> {
         \`creado_en\` DATETIME DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB;
     `);
-  } catch (err) {
-    // Si MySQL está desconectado, continúa con fallback en memoria
+  } catch (err: any) {
+    console.error('Error inicializando tablas en MySQL:', err.message);
   }
 }
-
