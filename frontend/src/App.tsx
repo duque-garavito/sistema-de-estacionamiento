@@ -22,6 +22,8 @@ import { Boleta } from '@modules/boletas/types/boleta.types';
 import { UserRoleSelector } from '@modules/auth/components/UserRoleSelector';
 import { useAuth, UserRole } from '@modules/auth/context/AuthContext';
 import { RoleGuard } from '@modules/auth/components/RoleGuard';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { ROUTES, TAB_TO_ROUTE, ROUTE_TO_TAB, TabType } from './routes/routes';
 import {
   Car,
   Clock,
@@ -29,7 +31,6 @@ import {
   Receipt,
   Settings,
   BarChart3,
-  ShieldCheck,
   ShieldAlert,
   LayoutDashboard,
   Building2,
@@ -47,7 +48,16 @@ import { VehiculosManager } from '@modules/movimientos/components/VehiculosManag
 
 export function App() {
   const { hasPermission } = useAuth();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'movimientos' | 'caja' | 'tarifas' | 'lista-negra' | 'reportes' | 'configuracion'>('dashboard');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const activeTab: TabType = ROUTE_TO_TAB[location.pathname] || 'dashboard';
+
+  const navigateToTab = (tab: TabType) => {
+    const route = TAB_TO_ROUTE[tab] || ROUTES.DASHBOARD;
+    navigate(route);
+  };
+
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [selectedMovimiento, setSelectedMovimiento] = useState<Movimiento | null>(null);
   const [activeBoleta, setActiveBoleta] = useState<Boleta | null>(null);
@@ -95,22 +105,22 @@ export function App() {
 
   useEffect(() => {
     cargarDatosGlobales();
-  }, [activeTab]);
+  }, [location.pathname]);
 
   // Manejo de Atajos de Teclado Globales (Hotkeys)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'F1') {
         e.preventDefault();
-        setActiveTab('movimientos');
+        navigateToTab('movimientos');
         addToast('info', 'Atajo F1', 'Navegado a Ingreso de Vehículos');
       } else if (e.key === 'F2') {
         e.preventDefault();
-        setActiveTab('movimientos');
+        navigateToTab('movimientos');
         addToast('info', 'Atajo F2', 'Navegado a Salida / Cobranza');
       } else if (e.key === 'F3') {
         e.preventDefault();
-        setActiveTab('movimientos');
+        navigateToTab('movimientos');
         addToast('info', 'Atajo F3', 'Buscador de Placa');
       } else if (e.key === 'Escape') {
         setSelectedMovimiento(null);
@@ -160,7 +170,7 @@ export function App() {
     }
   };
 
-  const menuItems: { id: 'dashboard' | 'movimientos' | 'caja' | 'tarifas' | 'lista-negra' | 'reportes' | 'configuracion'; label: string; icon: any; roles: UserRole[] }[] = [
+  const menuItems: { id: TabType; label: string; icon: any; roles: UserRole[] }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'OPERADOR', 'CAJERO'] },
     { id: 'movimientos', label: 'Movimientos', icon: Clock, roles: ['ADMIN', 'OPERADOR', 'CAJERO'] },
     { id: 'caja', label: 'Caja & Arqueo', icon: DollarSign, roles: ['ADMIN', 'CAJERO'] },
@@ -250,20 +260,25 @@ export function App() {
             </div>
           </div>
 
-          <span className={`badge ${dashStats.cajaAbierta ? 'badge-success' : 'badge-danger'}`} style={{ padding: '6px 10px' }}>
-            <ShieldCheck size={12} /> {dashStats.cajaAbierta ? 'Caja Abierta' : 'Caja Cerrada'}
-          </span>
-
-          <UserRoleSelector />
+          <Button
+            variant="secondary"
+            onClick={() => setIsEmisionFiscalOpen(true)}
+            icon={<Receipt size={16} color="var(--accent-warning)" />}
+            style={{ fontSize: '0.82rem' }}
+          >
+            Emisión Fiscal
+          </Button>
 
           <Button
             variant="secondary"
             onClick={() => setIsEmpresaModalOpen(true)}
-            icon={<Building2 size={16} />}
-            style={{ fontSize: '0.8rem', padding: '6px 12px' }}
+            icon={<Building2 size={16} color="var(--accent-primary)" />}
+            style={{ fontSize: '0.82rem' }}
           >
-            Config
+            Datos Empresa
           </Button>
+
+          <UserRoleSelector />
         </div>
       </header>
 
@@ -294,7 +309,7 @@ export function App() {
                   key={item.id}
                   onClick={() => {
                     if (allowed) {
-                      setActiveTab(item.id);
+                      navigateToTab(item.id);
                       setIsMobileMenuOpen(false);
                     }
                   }}
@@ -358,96 +373,102 @@ export function App() {
 
         {/* Dashboard Dynamic Area */}
         <main style={{ flex: 1, padding: '24px', background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column', gap: '20px', overflowX: 'hidden' }}>
-          {activeTab === 'dashboard' && (
-            <RoleGuard allowedRoles={['ADMIN', 'OPERADOR', 'CAJERO']}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {/* Stats KPIs */}
-                <DashboardStats stats={dashStats} />
+          <Routes>
+            <Route path="/" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
 
-                {/* Botones de Acciones Rápidas del Operador */}
-                <Card title="Acciones Rápidas Operativas (Atajos: F1, F2, F3)" subtitle="Operaciones frecuentes del día a día">
-                  <div className="responsive-grid-3" style={{ marginTop: '12px' }}>
-                    <Button
-                      variant="primary"
-                      onClick={() => setActiveTab('movimientos')}
-                      icon={<LogIn size={20} />}
-                      style={{ padding: '16px', fontSize: '1rem' }}
-                    >
-                      Registrar Entrada (F1)
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setActiveTab('movimientos')}
-                      icon={<LogOut size={20} />}
-                      style={{ padding: '16px', fontSize: '1rem' }}
-                    >
-                      Cobrar / Registrar Salida (F2)
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setActiveTab('caja')}
-                      icon={<Wallet size={20} />}
-                      style={{ padding: '16px', fontSize: '1rem' }}
-                    >
-                      Ver Arqueo de Caja & Gastos
-                    </Button>
-                  </div>
-                </Card>
-              </div>
-            </RoleGuard>
-          )}
+            <Route path={ROUTES.DASHBOARD} element={
+              <RoleGuard allowedRoles={['ADMIN', 'OPERADOR', 'CAJERO']}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {/* Stats KPIs */}
+                  <DashboardStats stats={dashStats} />
 
-          {activeTab === 'movimientos' && (
-            <RoleGuard allowedRoles={['ADMIN', 'OPERADOR', 'CAJERO']}>
-              <div className="responsive-movimientos-grid">
-                {/* Form Entry Panel */}
-                <Card title="Ingreso de Vehículo" subtitle="Registro de parqueo en tiempo real">
-                  <EntradaForm onSubmit={handleEntradaSubmit} />
-                </Card>
+                  {/* Botones de Acciones Rápidas del Operador */}
+                  <Card title="Acciones Rápidas Operativas (Atajos: F1, F2, F3)" subtitle="Operaciones frecuentes del día a día">
+                    <div className="responsive-grid-3" style={{ marginTop: '12px' }}>
+                      <Button
+                        variant="primary"
+                        onClick={() => navigateToTab('movimientos')}
+                        icon={<LogIn size={20} />}
+                        style={{ padding: '16px', fontSize: '1rem' }}
+                      >
+                        Registrar Entrada (F1)
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => navigateToTab('movimientos')}
+                        icon={<LogOut size={20} />}
+                        style={{ padding: '16px', fontSize: '1rem' }}
+                      >
+                        Cobrar / Registrar Salida (F2)
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => navigateToTab('caja')}
+                        icon={<Wallet size={20} />}
+                        style={{ padding: '16px', fontSize: '1rem' }}
+                      >
+                        Ver Arqueo de Caja & Gastos
+                      </Button>
+                    </div>
+                  </Card>
+                </div>
+              </RoleGuard>
+            } />
 
-                {/* Table Vehicles Active & Manager Panel */}
-                <VehiculosManager
-                  movimientosActivos={movimientos}
-                  onSalidaSelect={(mov) => setSelectedMovimiento(mov)}
-                  onVerTicket={(mov) => {
-                    setActiveTicketMovimientoId(mov.id);
-                    setActiveTicketTipo(mov.estado === 'Completado' ? 'salida' : 'entrada');
-                  }}
-                  onDataChanged={cargarDatosGlobales}
-                />
-              </div>
-            </RoleGuard>
-          )}
+            <Route path={ROUTES.MOVIMIENTOS} element={
+              <RoleGuard allowedRoles={['ADMIN', 'OPERADOR', 'CAJERO']}>
+                <div className="responsive-movimientos-grid">
+                  {/* Form Entry Panel */}
+                  <Card title="Ingreso de Vehículo" subtitle="Registro de parqueo en tiempo real">
+                    <EntradaForm onSubmit={handleEntradaSubmit} />
+                  </Card>
 
-          {activeTab === 'tarifas' && (
-            <RoleGuard allowedRoles={['ADMIN']}>
-              <TarifasManager />
-            </RoleGuard>
-          )}
+                  {/* Table Vehicles Active & Manager Panel */}
+                  <VehiculosManager
+                    movimientosActivos={movimientos}
+                    onSalidaSelect={(mov) => setSelectedMovimiento(mov)}
+                    onVerTicket={(mov) => {
+                      setActiveTicketMovimientoId(mov.id);
+                      setActiveTicketTipo(mov.estado === 'Completado' ? 'salida' : 'entrada');
+                    }}
+                    onDataChanged={cargarDatosGlobales}
+                  />
+                </div>
+              </RoleGuard>
+            } />
 
-          {activeTab === 'lista-negra' && (
-            <RoleGuard allowedRoles={['ADMIN']}>
-              <ListaNegraManager />
-            </RoleGuard>
-          )}
+            <Route path={ROUTES.TARIFAS} element={
+              <RoleGuard allowedRoles={['ADMIN']}>
+                <TarifasManager />
+              </RoleGuard>
+            } />
 
-          {activeTab === 'caja' && (
-            <RoleGuard allowedRoles={['ADMIN', 'CAJERO']}>
-              <CajaManager />
-            </RoleGuard>
-          )}
+            <Route path={ROUTES.LISTA_NEGRA} element={
+              <RoleGuard allowedRoles={['ADMIN']}>
+                <ListaNegraManager />
+              </RoleGuard>
+            } />
 
-          {activeTab === 'reportes' && (
-            <RoleGuard allowedRoles={['ADMIN', 'CAJERO']}>
-              <ReportesManager />
-            </RoleGuard>
-          )}
+            <Route path={ROUTES.CAJA} element={
+              <RoleGuard allowedRoles={['ADMIN', 'CAJERO']}>
+                <CajaManager />
+              </RoleGuard>
+            } />
 
-          {activeTab === 'configuracion' && (
-            <RoleGuard allowedRoles={['ADMIN']}>
-              <ConfiguracionManager onConfigChanged={cargarDatosGlobales} />
-            </RoleGuard>
-          )}
+            <Route path={ROUTES.REPORTES} element={
+              <RoleGuard allowedRoles={['ADMIN', 'CAJERO']}>
+                <ReportesManager />
+              </RoleGuard>
+            } />
+
+            <Route path={ROUTES.CONFIGURACION} element={
+              <RoleGuard allowedRoles={['ADMIN']}>
+                <ConfiguracionManager onConfigChanged={cargarDatosGlobales} />
+              </RoleGuard>
+            } />
+
+            <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+          </Routes>
         </main>
       </div>
 
