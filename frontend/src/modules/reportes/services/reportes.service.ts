@@ -26,9 +26,10 @@ export class ReportesService {
     try {
       const q = this.buildQueryParams(filtros);
       const res = await fetch(`/api/reportes/ingresos${q}`, { headers: this.getHeaders() });
-      if (!res.ok) throw new Error('Error al consultar reporte de ingresos');
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Error al consultar reporte de ingresos`);
       return await res.json();
-    } catch {
+    } catch (err: any) {
+      console.error('⚠️ [API REPORTES INGRESOS ERROR]:', err.message || err);
       return {
         totalRecaudado: 1250.0,
         totalOperaciones: 45,
@@ -45,9 +46,10 @@ export class ReportesService {
     try {
       const q = this.buildQueryParams(filtros);
       const res = await fetch(`/api/reportes/vehiculos${q}`, { headers: this.getHeaders() });
-      if (!res.ok) throw new Error('Error al consultar reporte de vehículos');
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Error al consultar reporte de vehículos`);
       return await res.json();
-    } catch {
+    } catch (err: any) {
+      console.error('⚠️ [API REPORTES VEHICULOS ERROR]:', err.message || err);
       return {
         totalAtendidos: 45,
         entradasRegistradas: 25,
@@ -65,9 +67,10 @@ export class ReportesService {
     try {
       const q = this.buildQueryParams(filtros);
       const res = await fetch(`/api/reportes/operadores${q}`, { headers: this.getHeaders() });
-      if (!res.ok) throw new Error('Error al consultar reporte de operadores');
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Error al consultar reporte de operadores`);
       return await res.json();
-    } catch {
+    } catch (err: any) {
+      console.error('⚠️ [API REPORTES OPERADORES ERROR]:', err.message || err);
       return [
         {
           operador: 'Juan Pérez (Admin)',
@@ -85,9 +88,10 @@ export class ReportesService {
     try {
       const q = this.buildQueryParams(filtros);
       const res = await fetch(`/api/reportes/caja-balance${q}`, { headers: this.getHeaders() });
-      if (!res.ok) throw new Error('Error al consultar reporte de caja');
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Error al consultar reporte de caja`);
       return await res.json();
-    } catch {
+    } catch (err: any) {
+      console.error('⚠️ [API REPORTES CAJA BALANCE ERROR]:', err.message || err);
       return {
         ingresosTotales: 1250.0,
         desgloseIngresos: { efectivo: 750.0, yape: 300.0, plin: 100.0, tarjeta: 100.0 },
@@ -104,9 +108,10 @@ export class ReportesService {
     try {
       const q = this.buildQueryParams(filtros);
       const res = await fetch(`/api/reportes/auditoria${q}`, { headers: this.getHeaders() });
-      if (!res.ok) throw new Error('Error al consultar registros de auditoría');
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Error al consultar registros de auditoría`);
       return await res.json();
-    } catch {
+    } catch (err: any) {
+      console.error('⚠️ [API REPORTES AUDITORIA ERROR]:', err.message || err);
       return [];
     }
   }

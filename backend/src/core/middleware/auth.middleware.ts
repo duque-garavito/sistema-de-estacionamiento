@@ -11,6 +11,7 @@ export interface AuthenticatedRequest extends Request {
 export function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
+    console.error('💥 [AUTH CRÍTICO] JWT_SECRET no existe en process.env');
     throw new Error('FATAL SECURITY ERROR: JWT_SECRET no está configurada en las variables de entorno (.env)');
   }
   return secret;
@@ -20,6 +21,7 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
   const authHeader = req.headers['authorization'];
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.warn(`🔒 [AUTH 401] Petición no autorizada en ${req.method} ${req.originalUrl} (Falta Bearer token)`);
     return res.status(401).json({
       error: 'Acceso no autorizado. Se requiere un token JWT válido (Bearer token).',
     });
@@ -43,6 +45,7 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
 
     next();
   } catch (err: any) {
+    console.warn(`🔒 [AUTH 401 FALLO JWT] ${req.method} ${req.originalUrl} -> Error: ${err.message}`);
     return res.status(401).json({
       error: err.message.includes('FATAL SECURITY ERROR')
         ? err.message
@@ -56,12 +59,14 @@ export function requireRole(...rolesPermitidos: string[]) {
     const roleActual = req.userRole;
 
     if (!roleActual) {
+      console.warn(`⛔ [AUTH 401 ROL] Sin autenticar en ${req.method} ${req.originalUrl}`);
       return res.status(401).json({ error: 'Usuario no autenticado.' });
     }
 
     const rolesUppercase = rolesPermitidos.map((r) => r.toUpperCase());
 
     if (!rolesUppercase.includes(roleActual.toUpperCase())) {
+      console.warn(`⛔ [AUTH 403 ROL INSUFICIENTE] ${req.method} ${req.originalUrl} | Requerido: ${rolesPermitidos.join(' o ')} | Actual: ${roleActual}`);
       return res.status(403).json({
         error: `Acceso Denegado. Esta operación requiere el rol: ${rolesPermitidos.join(' o ')}. Tu rol actual es: ${roleActual}.`,
         rolRequerido: rolesPermitidos,
