@@ -1,0 +1,20 @@
+{
+  "name": "sistema-cochera-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de Gestión de Cochera y Estacionamiento - Arquitectura Modular por Feature/Dominio",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
+    "lint": "npm run lint --workspace=frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
