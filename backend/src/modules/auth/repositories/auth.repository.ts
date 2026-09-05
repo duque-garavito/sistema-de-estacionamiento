@@ -20,7 +20,7 @@ export class AuthRepository {
   }
 
   async findAll(): Promise<UsuarioEntity[]> {
-    const [rows]: any = await dbPool.query('SELECT id, nombre, email, rol, estado, creado_en FROM usuarios ORDER BY id ASC');
+    const [rows]: any = await dbPool.query('SELECT id, nombre, email, rol, estado, COALESCE(creado_en, fecha_registro, CURRENT_TIMESTAMP) AS creado_en FROM usuarios ORDER BY id ASC');
     if (Array.isArray(rows)) {
       return rows as UsuarioEntity[];
     }
@@ -49,7 +49,7 @@ export class AuthRepository {
       [data.nombre || null, data.email || null, data.rol || null, data.estado !== undefined ? data.estado : null, id]
     );
 
-    const [rows]: any = await dbPool.query('SELECT id, nombre, email, rol, estado, creado_en FROM usuarios WHERE id = ?', [id]);
+    const [rows]: any = await dbPool.query('SELECT id, nombre, email, rol, estado, COALESCE(creado_en, fecha_registro, CURRENT_TIMESTAMP) AS creado_en FROM usuarios WHERE id = ?', [id]);
     if (Array.isArray(rows) && rows.length > 0) {
       return rows[0] as UsuarioEntity;
     }

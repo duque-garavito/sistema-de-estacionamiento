@@ -39,6 +39,9 @@ export async function inicializarTablasDatabase(): Promise<void> {
     try {
       await dbPool.query(`ALTER TABLE \`usuarios\` ADD COLUMN \`estado\` TINYINT(1) NOT NULL DEFAULT 1`);
     } catch {}
+    try {
+      await dbPool.query(`ALTER TABLE \`usuarios\` ADD COLUMN \`creado_en\` DATETIME DEFAULT CURRENT_TIMESTAMP`);
+    } catch {}
 
     // Verificar e insertar usuarios por defecto con passwords hash de bcrypt
     const [userRows]: any = await dbPool.query('SELECT id FROM usuarios WHERE email = ?', ['admin@cocheracentral.pe']);
