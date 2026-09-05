@@ -27,7 +27,7 @@ export const LoginPage: React.FC = () => {
 
       // Redireccionar al módulo principal asignado según el rol autenticado
       const savedUserStr = localStorage.getItem('cochera_user');
-      let targetRoute = ROUTES.DASHBOARD;
+      let targetRoute: string = ROUTES.DASHBOARD;
       if (savedUserStr) {
         try {
           const u = JSON.parse(savedUserStr);
