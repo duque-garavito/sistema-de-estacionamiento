@@ -17,28 +17,56 @@ export const dbPool = mysql.createPool({
 
 export async function inicializarTablasDatabase(): Promise<void> {
   try {
-    // 0. Tabla usuarios
+    // 0. Tabla usuarios & alter si la tabla existía con esquema previo
     await dbPool.query(`
       CREATE TABLE IF NOT EXISTS \`usuarios\` (
         \`id\` INT AUTO_INCREMENT PRIMARY KEY,
         \`nombre\` VARCHAR(100) NOT NULL,
         \`email\` VARCHAR(100) NOT NULL UNIQUE,
-        \`password_hash\` VARCHAR(255) NOT NULL,
+        \`password_hash\` VARCHAR(255) NULL,
         \`rol\` ENUM('ADMIN', 'OPERADOR', 'CAJERO') NOT NULL DEFAULT 'OPERADOR',
         \`estado\` TINYINT(1) DEFAULT 1,
         \`creado_en\` DATETIME DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB;
     `);
 
-    // Verificar e insertar usuario Administrador por defecto si no existe
+    try {
+      await dbPool.query(`ALTER TABLE \`usuarios\` ADD COLUMN \`password_hash\` VARCHAR(255) NULL`);
+    } catch {}
+    try {
+      await dbPool.query(`ALTER TABLE \`usuarios\` ADD COLUMN \`rol\` ENUM('ADMIN', 'OPERADOR', 'CAJERO') NOT NULL DEFAULT 'OPERADOR'`);
+    } catch {}
+    try {
+      await dbPool.query(`ALTER TABLE \`usuarios\` ADD COLUMN \`estado\` TINYINT(1) NOT NULL DEFAULT 1`);
+    } catch {}
+
+    // Verificar e insertar usuarios por defecto con passwords hash de bcrypt
     const [userRows]: any = await dbPool.query('SELECT id FROM usuarios WHERE email = ?', ['admin@cocheracentral.pe']);
     if (!Array.isArray(userRows) || userRows.length === 0) {
-      const defaultHash = await bcrypt.hash('admin123', 10);
+      const adminHash = await bcrypt.hash('admin123', 10);
       await dbPool.query(
         'INSERT INTO usuarios (nombre, email, password_hash, rol, estado) VALUES (?, ?, ?, ?, 1)',
-        ['Administrador Cochera', 'admin@cocheracentral.pe', defaultHash, 'ADMIN']
+        ['Administrador Cochera', 'admin@cocheracentral.pe', adminHash, 'ADMIN']
       );
-      console.log('🔒 Usuario Administrador por defecto creado con éxito (admin@cocheracentral.pe / admin123)');
+      console.log('🔒 Usuario Administrador creado (admin@cocheracentral.pe / admin123)');
+    }
+
+    const [cajeroRows]: any = await dbPool.query('SELECT id FROM usuarios WHERE email = ?', ['cajero@cocheracentral.pe']);
+    if (!Array.isArray(cajeroRows) || cajeroRows.length === 0) {
+      const cajeroHash = await bcrypt.hash('cajero123', 10);
+      await dbPool.query(
+        'INSERT INTO usuarios (nombre, email, password_hash, rol, estado) VALUES (?, ?, ?, ?, 1)',
+        ['Cajero Turno Principal', 'cajero@cocheracentral.pe', cajeroHash, 'CAJERO']
+      );
+    }
+
+    const [operadorRows]: any = await dbPool.query('SELECT id FROM usuarios WHERE email = ?', ['operador@cocheracentral.pe']);
+    if (!Array.isArray(operadorRows) || operadorRows.length === 0) {
+      const operadorHash = await bcrypt.hash('operador123', 10);
+      await dbPool.query(
+        'INSERT INTO usuarios (nombre, email, password_hash, rol, estado) VALUES (?, ?, ?, ?, 1)',
+        ['Operador Garita', 'operador@cocheracentral.pe', operadorHash, 'OPERADOR']
+      );
     }
 
     // 1. Tabla empresa_config

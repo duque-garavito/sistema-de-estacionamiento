@@ -1,9 +1,10 @@
 import { VehiculoListaNegra, AgregarListaNegraDTO } from '../types/lista-negra.types';
+import { getAuthHeaders } from '@core/utils/authHeaders';
 
 export class ListaNegraService {
   static async obtenerLista(): Promise<VehiculoListaNegra[]> {
     try {
-      const res = await fetch('/api/lista-negra');
+      const res = await fetch('/api/lista-negra', { headers: getAuthHeaders() });
       if (!res.ok) throw new Error('Error al obtener lista negra');
       return await res.json();
     } catch {
@@ -21,13 +22,9 @@ export class ListaNegraService {
   }
 
   static async agregar(dto: AgregarListaNegraDTO): Promise<VehiculoListaNegra> {
-    const role = localStorage.getItem('app_user_role') || 'ADMIN';
     const res = await fetch('/api/lista-negra', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-role': role,
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(dto),
     });
     if (!res.ok) {
@@ -38,12 +35,9 @@ export class ListaNegraService {
   }
 
   static async retirar(placa: string): Promise<void> {
-    const role = localStorage.getItem('app_user_role') || 'ADMIN';
     const res = await fetch(`/api/lista-negra/${placa}`, {
       method: 'DELETE',
-      headers: {
-        'x-user-role': role,
-      },
+      headers: getAuthHeaders(),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -54,7 +48,7 @@ export class ListaNegraService {
   static async verificarPlaca(placa: string): Promise<{ restringido: boolean; datos?: any }> {
     if (!placa || placa.trim().length < 3) return { restringido: false };
     try {
-      const res = await fetch(`/api/lista-negra/verificar/${encodeURIComponent(placa.trim().toUpperCase())}`);
+      const res = await fetch(`/api/lista-negra/verificar/${encodeURIComponent(placa.trim().toUpperCase())}`, { headers: getAuthHeaders() });
       if (!res.ok) return { restringido: false };
       return await res.json();
     } catch {

@@ -1,4 +1,5 @@
 import { Movimiento, EntradaDTO, SalidaDTO } from '../types/movimiento.types';
+import { getAuthHeaders } from '@core/utils/authHeaders';
 
 // Mock initial state for demonstration / standalone UI development
 const mockMovimientos: Movimiento[] = [
@@ -11,7 +12,7 @@ const mockMovimientos: Movimiento[] = [
     marcaModelo: 'Toyota Yaris',
     propietarioDni: '12345678',
     propietarioNombre: 'Juan Pérez',
-    fechaEntrada: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(), // ~1.1 días ago
+    fechaEntrada: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
     tarifaDiaAplicada: 10.0,
     momentoPago: 'SALIDA',
     estado: 'Activo',
@@ -32,27 +33,12 @@ const mockMovimientos: Movimiento[] = [
     estado: 'Activo',
     ubicacion: 'B-04',
   },
-  {
-    id: 'MOV-1000',
-    codigoTicket: 'TKT-001000',
-    placa: 'MOT-551',
-    tipoVehiculo: 'Moto',
-    color: 'Rojo',
-    fechaEntrada: new Date(Date.now() - 1000 * 60 * 300).toISOString(),
-    fechaSalida: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-    tarifaDiaAplicada: 5.0,
-    diasCobrados: 1,
-    totalPagar: 5.0,
-    momentoPago: 'ENTRADA',
-    estado: 'Completado',
-    ubicacion: 'M-01',
-  },
 ];
 
 export class MovimientosService {
   static async obtenerActivos(): Promise<Movimiento[]> {
     try {
-      const res = await fetch('/api/movimientos/activos');
+      const res = await fetch('/api/movimientos/activos', { headers: getAuthHeaders() });
       if (!res.ok) throw new Error('Error al conectar con la API');
       return await res.json();
     } catch {
@@ -64,7 +50,7 @@ export class MovimientosService {
     try {
       const res = await fetch('/api/movimientos/entrada', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(dto),
       });
       if (!res.ok) {
@@ -101,7 +87,7 @@ export class MovimientosService {
     try {
       const res = await fetch('/api/movimientos/salida', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(dto),
       });
       if (!res.ok) {
@@ -114,24 +100,20 @@ export class MovimientosService {
       if (!mov) throw new Error('Movimiento no encontrado');
       mov.fechaSalida = new Date().toISOString();
       mov.estado = 'Completado';
-      
+
       const entradaDate = new Date(mov.fechaEntrada);
       const salidaDate = new Date(mov.fechaSalida);
-      
-      const entradaYear = entradaDate.getFullYear();
-      const entradaMonth = entradaDate.getMonth();
-      const entradaDay = entradaDate.getDate();
 
-      const salidaYear = salidaDate.getFullYear();
-      const salidaMonth = salidaDate.getMonth();
-      const salidaDay = salidaDate.getDate();
+      const esMismoDia = (
+        entradaDate.getFullYear() === salidaDate.getFullYear() &&
+        entradaDate.getMonth() === salidaDate.getMonth() &&
+        entradaDate.getDate() === salidaDate.getDate()
+      );
 
-      const esMismoDia = (entradaYear === salidaYear && entradaMonth === salidaMonth && entradaDay === salidaDay);
-      
       let dias = 1;
       if (!esMismoDia) {
-        const startMidnight = new Date(entradaYear, entradaMonth, entradaDay).getTime();
-        const endMidnight = new Date(salidaYear, salidaMonth, salidaDay).getTime();
+        const startMidnight = new Date(entradaDate.getFullYear(), entradaDate.getMonth(), entradaDate.getDate()).getTime();
+        const endMidnight = new Date(salidaDate.getFullYear(), salidaDate.getMonth(), salidaDate.getDate()).getTime();
         const diffDaysCalendar = Math.round((endMidnight - startMidnight) / (1000 * 60 * 60 * 24));
         dias = Math.max(1, diffDaysCalendar + 1);
       }
@@ -150,7 +132,7 @@ export class MovimientosService {
   static async obtenerHistorial(placa?: string): Promise<Movimiento[]> {
     try {
       const url = placa ? `/api/movimientos/historial?placa=${encodeURIComponent(placa)}` : '/api/movimientos/historial';
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: getAuthHeaders() });
       if (!res.ok) throw new Error('Error al consultar historial');
       return await res.json();
     } catch {
@@ -165,7 +147,7 @@ export class MovimientosService {
     try {
       const res = await fetch(`/api/movimientos/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(dto),
       });
       if (!res.ok) {
@@ -185,4 +167,3 @@ export class MovimientosService {
     }
   }
 }
-

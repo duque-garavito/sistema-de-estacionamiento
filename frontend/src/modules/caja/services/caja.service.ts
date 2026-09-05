@@ -6,12 +6,13 @@ import {
   CajaDetalle,
   HistorialDiaCaja,
 } from '../types/caja.types';
+import { getAuthHeaders } from '@core/utils/authHeaders';
 
 export class CajaService {
   static async obtenerResumen(fecha?: string): Promise<CajaResumen> {
     try {
       const q = fecha ? `?fecha=${fecha}` : '';
-      const res = await fetch(`/api/caja/resumen${q}`);
+      const res = await fetch(`/api/caja/resumen${q}`, { headers: getAuthHeaders() });
       if (!res.ok) throw new Error('Error al obtener resumen de caja');
       return await res.json();
     } catch {
@@ -26,13 +27,9 @@ export class CajaService {
   }
 
   static async registrarGasto(dto: RegistrarGastoDTO): Promise<Gasto> {
-    const role = localStorage.getItem('app_user_role') || 'ADMIN';
     const res = await fetch('/api/caja/gastos', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-role': role,
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(dto),
     });
     if (!res.ok) {
@@ -42,11 +39,10 @@ export class CajaService {
     return await res.json();
   }
 
-
   static async obtenerGastos(fecha?: string): Promise<Gasto[]> {
     try {
       const q = fecha ? `?fecha=${fecha}` : '';
-      const res = await fetch(`/api/caja/gastos${q}`);
+      const res = await fetch(`/api/caja/gastos${q}`, { headers: getAuthHeaders() });
       if (!res.ok) throw new Error('Error al obtener gastos');
       return await res.json();
     } catch {
@@ -66,7 +62,7 @@ export class CajaService {
   static async obtenerRecaudadores(fecha?: string): Promise<RecaudadorItem[]> {
     try {
       const q = fecha ? `?fecha=${fecha}` : '';
-      const res = await fetch(`/api/caja/recaudadores${q}`);
+      const res = await fetch(`/api/caja/recaudadores${q}`, { headers: getAuthHeaders() });
       if (!res.ok) throw new Error('Error al obtener recaudadores');
       return await res.json();
     } catch {
@@ -80,7 +76,7 @@ export class CajaService {
   static async obtenerDetalle(fecha?: string): Promise<CajaDetalle> {
     try {
       const q = fecha ? `?fecha=${fecha}` : '';
-      const res = await fetch(`/api/caja/detalle${q}`);
+      const res = await fetch(`/api/caja/detalle${q}`, { headers: getAuthHeaders() });
       if (!res.ok) throw new Error('Error al obtener detalle de caja');
       return await res.json();
     } catch {
@@ -115,7 +111,7 @@ export class CajaService {
 
   static async obtenerHistorial(dias: number = 30): Promise<HistorialDiaCaja[]> {
     try {
-      const res = await fetch(`/api/caja/historial?dias=${dias}`);
+      const res = await fetch(`/api/caja/historial?dias=${dias}`, { headers: getAuthHeaders() });
       if (!res.ok) throw new Error('Error al obtener historial');
       return await res.json();
     } catch {

@@ -1,7 +1,8 @@
 import { Boleta, EmpresaConfig, EmitirComprobanteDTO } from '../types/boleta.types';
 import { ConfiguracionService } from '@modules/configuracion/services/configuracion.service';
+import { getAuthHeaders } from '@core/utils/authHeaders';
 
-const API_BASE = 'http://localhost:4000/api/boletas';
+const API_BASE = '/api/boletas';
 
 export class BoletasService {
   private static defaultEmpresa: EmpresaConfig = {
@@ -43,7 +44,7 @@ export class BoletasService {
     try {
       const res = await fetch(`${API_BASE}/emitir`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(dto),
       });
       if (res.ok) {

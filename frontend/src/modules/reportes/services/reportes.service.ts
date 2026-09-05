@@ -7,13 +7,11 @@ import {
   RegistroAuditoria,
 } from '../types/reportes.types';
 
+import { getAuthHeaders } from '@core/utils/authHeaders';
+
 export class ReportesService {
   private static getHeaders() {
-    const role = localStorage.getItem('app_user_role') || 'ADMIN';
-    return {
-      'Content-Type': 'application/json',
-      'x-user-role': role,
-    };
+    return getAuthHeaders();
   }
 
   private static buildQueryParams(filtros: FiltrosReporte): string {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export type UserRole = 'ADMIN' | 'OPERADOR' | 'CAJERO';
 
@@ -46,6 +46,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     return DEFAULT_USER;
   });
+
+  useEffect(() => {
+    const ensureToken = async () => {
+      try {
+        const pass = `${user.rol.toLowerCase()}123`;
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: user.email, password: pass }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.token) {
+            localStorage.setItem('cochera_auth_token', data.token);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+    ensureToken();
+  }, [user]);
 
   const setRole = (newRole: UserRole) => {
     localStorage.setItem('app_user_role', newRole);

@@ -1,11 +1,12 @@
 import { DashboardResumen } from '../types/dashboard.types';
+import { getAuthHeaders } from '@core/utils/authHeaders';
 
 const API_BASE = '/api/dashboard';
 
 export class DashboardService {
   static async obtenerStats(): Promise<DashboardResumen> {
     try {
-      const res = await fetch(`${API_BASE}/stats`);
+      const res = await fetch(`${API_BASE}/stats`, { headers: getAuthHeaders() });
       if (!res.ok) throw new Error('Error al obtener estadísticas del dashboard');
       return await res.json();
     } catch {

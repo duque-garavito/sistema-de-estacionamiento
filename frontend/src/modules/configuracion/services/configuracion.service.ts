@@ -5,13 +5,11 @@ import {
   ActualizarUsuarioDTO,
 } from '../types/configuracion.types';
 
+import { getAuthHeaders } from '@core/utils/authHeaders';
+
 export class ConfiguracionService {
   private static getHeaders() {
-    const role = localStorage.getItem('app_user_role') || 'ADMIN';
-    return {
-      'Content-Type': 'application/json',
-      'x-user-role': role,
-    };
+    return getAuthHeaders();
   }
 
   static async obtenerConfiguracion(): Promise<EmpresaConfig> {

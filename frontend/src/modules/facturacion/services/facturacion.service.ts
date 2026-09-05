@@ -3,13 +3,11 @@ import {
   EmitirComprobanteDTO,
 } from '../types/facturacion.types';
 
+import { getAuthHeaders } from '@core/utils/authHeaders';
+
 export class FacturacionService {
   private static getHeaders() {
-    const role = localStorage.getItem('app_user_role') || 'ADMIN';
-    return {
-      'Content-Type': 'application/json',
-      'x-user-role': role,
-    };
+    return getAuthHeaders();
   }
 
   static async emitir(dto: EmitirComprobanteDTO): Promise<ComprobanteFiscal> {

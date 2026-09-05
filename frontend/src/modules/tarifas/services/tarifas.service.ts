@@ -1,9 +1,10 @@
 import { Tarifa } from '../types/tarifa.types';
+import { getAuthHeaders } from '@core/utils/authHeaders';
 
 export class TarifasService {
   static async obtenerTarifas(): Promise<Tarifa[]> {
     try {
-      const res = await fetch('/api/tarifas');
+      const res = await fetch('/api/tarifas', { headers: getAuthHeaders() });
       if (!res.ok) throw new Error('Error al obtener tarifas');
       return await res.json();
     } catch {
@@ -17,13 +18,9 @@ export class TarifasService {
   }
 
   static async actualizarTarifa(tarifa: Tarifa): Promise<Tarifa> {
-    const role = localStorage.getItem('app_user_role') || 'ADMIN';
     const res = await fetch('/api/tarifas', {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-role': role,
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(tarifa),
     });
 
