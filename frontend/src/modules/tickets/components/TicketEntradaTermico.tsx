@@ -66,7 +66,7 @@ export const TicketEntradaTermico: FC<TicketEntradaTermicoProps> = ({ ticket }) 
           ${ticket.color ? `<div class="flex-between"><span>Color:</span> <span>${ticket.color}</span></div>` : ''}
           <div class="flex-between"><span>Fecha Entrada:</span> <span>${new Date(ticket.fechaEntrada).toLocaleDateString()}</span></div>
           <div class="flex-between"><span>Hora Entrada:</span> <span class="bold">${new Date(ticket.fechaEntrada).toLocaleTimeString()}</span></div>
-          <div class="flex-between"><span>Tarifa Día:</span> <span class="bold">S/ ${ticket.tarifaDiaAplicada.toFixed(2)}</span></div>
+          <div class="flex-between"><span>Tarifa Día:</span> <span class="bold">S/ ${(ticket.tarifaDiaAplicada ?? 0).toFixed(2)}</span></div>
           <div class="flex-between"><span>Pago al:</span> <span>${ticket.momentoPago}</span></div>
           ${ticket.ubicacion ? `<div class="flex-between"><span>Ubicación:</span> <span>${ticket.ubicacion}</span></div>` : ''}
           <div class="flex-between"><span>Atendido por:</span> <span>${ticket.usuarioIngreso}</span></div>
@@ -197,7 +197,7 @@ export const TicketEntradaTermico: FC<TicketEntradaTermicoProps> = ({ ticket }) 
             <span>Ingreso:</span> <span>{new Date(ticket.fechaEntrada).toLocaleString()}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span>Tarifa Día:</span> <strong>S/ {ticket.tarifaDiaAplicada.toFixed(2)}</strong>
+            <span>Tarifa Día:</span> <strong>S/ {(ticket.tarifaDiaAplicada ?? 0).toFixed(2)}</strong>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>Operador:</span> <span>{ticket.usuarioIngreso}</span>

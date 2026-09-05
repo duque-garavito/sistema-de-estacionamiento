@@ -67,13 +67,13 @@ export const TarifasManager: FC = () => {
       header: 'Precio por Día (24h)',
       cell: (item) => (
         <strong style={{ color: 'var(--accent-success)', fontSize: '1rem' }}>
-          S/ {item.precioDia.toFixed(2)}
+          S/ {(item.precioDia ?? 0).toFixed(2)}
         </strong>
       ),
     },
     {
       header: 'Precio por Hora',
-      cell: (item) => `S/ ${item.precioHora.toFixed(2)}`,
+      cell: (item) => `S/ ${(item.precioHora ?? 0).toFixed(2)}`,
     },
     {
       header: 'Tolerancia',
@@ -172,7 +172,7 @@ export const TarifasManager: FC = () => {
                 label="Precio por Día (S/)"
                 type="number"
                 step="0.50"
-                value={editingTarifa.precioDia}
+                value={editingTarifa.precioDia ?? 0}
                 onChange={(e) => setEditingTarifa({ ...editingTarifa, precioDia: parseFloat(e.target.value) || 0 })}
                 required
               />
@@ -180,7 +180,7 @@ export const TarifasManager: FC = () => {
                 label="Precio por Hora (S/)"
                 type="number"
                 step="0.50"
-                value={editingTarifa.precioHora}
+                value={editingTarifa.precioHora ?? 0}
                 onChange={(e) => setEditingTarifa({ ...editingTarifa, precioHora: parseFloat(e.target.value) || 0 })}
                 required
               />
@@ -190,7 +190,7 @@ export const TarifasManager: FC = () => {
               <Input
                 label="Tolerancia Gratis (Minutos)"
                 type="number"
-                value={editingTarifa.toleranciaMinutos}
+                value={editingTarifa.toleranciaMinutos ?? 10}
                 onChange={(e) => setEditingTarifa({ ...editingTarifa, toleranciaMinutos: parseInt(e.target.value, 10) || 0 })}
                 required
               />
@@ -198,7 +198,7 @@ export const TarifasManager: FC = () => {
                 label="Precio Fracción 15m (S/)"
                 type="number"
                 step="0.50"
-                value={editingTarifa.fraccion15min}
+                value={editingTarifa.fraccion15min ?? 0}
                 onChange={(e) => setEditingTarifa({ ...editingTarifa, fraccion15min: parseFloat(e.target.value) || 0 })}
               />
             </div>
