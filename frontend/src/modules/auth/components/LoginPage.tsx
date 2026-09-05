@@ -24,7 +24,24 @@ export const LoginPage: React.FC = () => {
 
     try {
       await login(email, password);
-      navigate(ROUTES.DASHBOARD);
+
+      // Redireccionar al módulo principal asignado según el rol autenticado
+      const savedUserStr = localStorage.getItem('cochera_user');
+      let targetRoute = ROUTES.DASHBOARD;
+      if (savedUserStr) {
+        try {
+          const u = JSON.parse(savedUserStr);
+          if (u.rol === 'OPERADOR') {
+            targetRoute = ROUTES.MOVIMIENTOS;
+          } else if (u.rol === 'CAJERO') {
+            targetRoute = ROUTES.CAJA;
+          }
+        } catch {
+          // fallback
+        }
+      }
+
+      navigate(targetRoute);
     } catch (err: any) {
       setErrorMsg(err.message || 'Error al iniciar sesión. Verifique sus credenciales.');
     } finally {
