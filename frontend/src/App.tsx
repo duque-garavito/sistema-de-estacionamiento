@@ -48,7 +48,7 @@ import { TicketPreviewModal } from '@modules/tickets/components/TicketPreviewMod
 import { VehiculosManager } from '@modules/movimientos/components/VehiculosManager';
 
 export function App() {
-  const { user, isAuthenticated, logout, hasPermission } = useAuth();
+  const { isAuthenticated, logout, hasPermission } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 

@@ -2,9 +2,10 @@ import React from 'react';
 import { useAuth, UserRole } from '../context/AuthContext';
 import { Shield } from 'lucide-react';
 
-
 export const UserRoleSelector: React.FC = () => {
   const { user, setRole } = useAuth();
+
+  if (!user) return null;
 
   const getRoleBadgeStyle = (rol: UserRole) => {
     switch (rol) {

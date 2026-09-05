@@ -4,7 +4,7 @@ import { useAuth, UserRole } from '../context/AuthContext';
 import { Card } from '@core/design-system/Card';
 import { Input } from '@core/design-system/Input';
 import { Button } from '@core/design-system/Button';
-import { Car, Lock, Mail, Eye, EyeOff, ShieldCheck, LogIn, AlertCircle } from 'lucide-react';
+import { Car, Lock, Mail, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 import { ROUTES } from '@routes/routes';
 
 export const LoginPage: React.FC = () => {
